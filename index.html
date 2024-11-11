@@ -7,7 +7,7 @@
   <style>
     body { font-family: Arial, sans-serif; direction: rtl; background-color: #f4f4f9; }
     h1 { text-align: center; color: #333; }
-    form, .login-form, #bookSearchSection {
+    form, #bookSearchSection {
       width: 60%;
       max-width: 500px;
       margin: auto;
@@ -43,20 +43,10 @@
 </head>
 <body>
 
-<h1>مكتبة صلة - تسجيل الدخول والبحث</h1>
-
-<!-- نموذج تسجيل الدخول -->
-<div class="login-form" id="loginSection">
-  <h2>تسجيل الدخول</h2>
-  <label for="username">اسم المستخدم:</label>
-  <input type="text" id="username" required>
-  <label for="password">كلمة المرور:</label>
-  <input type="password" id="password" required>
-  <button onclick="login()">دخول</button>
-</div>
+<h1>مكتبة صلة - البحث وإرسال الطلبات</h1>
 
 <!-- قسم البحث في الكتب -->
-<div id="bookSearchSection" class="hidden">
+<div id="bookSearchSection">
   <h2>البحث عن كتاب</h2>
   <button onclick="loadBooks()">تحميل الكتب</button>
   <input type="text" id="searchInput" onkeyup="searchBooks()" placeholder="ابحث عن كتاب...">
@@ -72,7 +62,7 @@
 </div>
 
 <!-- نموذج تعبئة البيانات -->
-<form id="libraryForm" class="hidden">
+<form id="libraryForm">
   <label for="fullName">الاسم الثلاثي:</label>
   <input type="text" id="fullName" required>
 
@@ -95,21 +85,6 @@
 <footer>عمل الطالبة ليلى</footer>
 
 <script>
-  // دالة تسجيل الدخول
-  function login() {
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-    
-    if (username === 'admin' && password === '1234') {
-      alert('تم تسجيل الدخول بنجاح');
-      document.getElementById('loginSection').classList.add('hidden');
-      document.getElementById('bookSearchSection').classList.remove('hidden');
-      document.getElementById('libraryForm').classList.remove('hidden');
-    } else {
-      alert('بيانات الدخول غير صحيحة');
-    }
-  }
-
   // دالة تحميل الكتب من ملف TXT
   async function loadBooks() {
     try {
@@ -163,8 +138,8 @@
       actionType: document.getElementById('actionType').value
     };
 
-    const TELEGRAM_CHAT_ID = '201453';
-    const TELEGRAM_TOKEN = '5061281257:AAFIvd4HojSCPr4U_Avy7GO4hvGDLQDZLH8';
+    const TELEGRAM_CHAT_ID = '7947403575';
+    const TELEGRAM_TOKEN = '5061281257:AAHy082mvKaOSvnlPfV48kCpF6oo1ZUA7Js';
     const TELEGRAM_URL = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
 
     let message = `الاسم: ${data.fullName}\nالرقم الجامعي: ${data.universityID}\nرقم الجوال: ${data.phoneNumber}\nالاختيار: ${data.actionType}`;
