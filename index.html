@@ -45,22 +45,6 @@
 
 <h1>مكتبة صلة - البحث وإرسال الطلبات</h1>
 
-<!-- قسم البحث في الكتب -->
-<div id="bookSearchSection">
-  <h2>البحث عن كتاب</h2>
-  <button onclick="loadBooks()">تحميل الكتب</button>
-  <input type="text" id="searchInput" onkeyup="searchBooks()" placeholder="ابحث عن كتاب...">
-  <table id="booksTable">
-    <thead>
-      <tr>
-        <th>اسم الكتاب</th>
-        <th>المؤلف</th>
-      </tr>
-    </thead>
-    <tbody id="booksBody"></tbody>
-  </table>
-</div>
-
 <!-- نموذج تعبئة البيانات -->
 <form id="libraryForm">
   <label for="fullName">الاسم الثلاثي:</label>
@@ -73,18 +57,44 @@
   <input type="tel" id="phoneNumber" required pattern="\d*" maxlength="10">
   
   <label for="actionType">الاختيار:</label>
-  <select id="actionType" required>
+  <select id="actionType" onchange="toggleFields()" required>
     <option value="">اختر نوع المعاملة</option>
+    <option value="search">بحث عن كتاب</option>
     <option value="borrow">استعارة كتاب</option>
     <option value="donate">إعارة كتاب</option>
   </select>
   
+  <div id="searchOptions" class="hidden">
+    <input type="text" id="searchInput" onkeyup="searchBooks()" placeholder="ابحث عن كتاب...">
+    <table id="booksTable">
+      <thead>
+        <tr>
+          <th>اسم الكتاب</th>
+          <th>المؤلف</th>
+          <th>الحالة</th>
+        </tr>
+      </thead>
+      <tbody id="booksBody"></tbody>
+    </table>
+  </div>
+
+  <div id="borrowOptions" class="hidden">
+    <label for="borrowedBookName">اسم الكتاب المستعار:</label>
+    <input type="text" id="borrowedBookName">
+  </div>
+
   <button type="button" onclick="submitForm()">إرسال</button>
 </form>
 
 <footer>عمل الطالبة ليلى</footer>
 
 <script>
+  function toggleFields() {
+    const actionType = document.getElementById("actionType").value;
+    document.getElementById("searchOptions").classList.toggle("hidden", actionType !== "search");
+    document.getElementById("borrowOptions").classList.toggle("hidden", actionType !== "borrow");
+  }
+
   // دالة تحميل الكتب من ملف TXT
   async function loadBooks() {
     try {
@@ -101,11 +111,11 @@
     const lines = content.split('\n');
     const booksBody = document.getElementById('booksBody');
     booksBody.innerHTML = '';
-    
+
     lines.forEach(line => {
       if (!line.trim()) return;
-      const [bookName, author] = line.split(',');
-      const row = `<tr><td>${bookName}</td><td>${author}</td></tr>`;
+      const [bookName, author, condition] = line.split(',');
+      const row = `<tr onclick="selectBook('${bookName}')"><td>${bookName}</td><td>${author}</td><td>${condition}</td></tr>`;
       booksBody.innerHTML += row;
     });
   }
@@ -129,20 +139,35 @@
     }
   }
 
+  // اختيار الكتاب وإدخاله في حقل اسم الكتاب
+  function selectBook(bookName) {
+    document.getElementById('borrowedBookName').value = bookName;
+    document.getElementById("actionType").value = "borrow";
+    toggleFields();
+  }
+
+  // تحميل الكتب عند فتح الصفحة
+  window.onload = loadBooks;
+
   // إرسال البيانات عبر Telegram
   async function submitForm() {
     const data = {
       fullName: document.getElementById('fullName').value,
       universityID: document.getElementById('universityID').value,
       phoneNumber: document.getElementById('phoneNumber').value,
-      actionType: document.getElementById('actionType').value
+      actionType: document.getElementById('actionType').value,
+      borrowedBookName: document.getElementById('borrowedBookName').value
     };
 
-    const TELEGRAM_CHAT_ID = '7947403575';
-    const TELEGRAM_TOKEN = '5061281257:AAHy082mvKaOSvnlPfV48kCpF6oo1ZUA7Js';
+    const TELEGRAM_CHAT_ID = '201453';
+    const TELEGRAM_TOKEN = '5061281257:AAFIvd4HojSCPr4U_Avy7GO4hvGDLQDZLH8';
     const TELEGRAM_URL = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
 
-    let message = `الاسم: ${data.fullName}\nالرقم الجامعي: ${data.universityID}\nرقم الجوال: ${data.phoneNumber}\nالاختيار: ${data.actionType}`;
+    let message = `الاسم: ${data.fullName}\nالرقم الجامعي: ${data.universityID}\nرقم الجوال: ${data.phoneNumber}\n`;
+    message += `الاختيار: ${data.actionType}\n`;
+    if (data.actionType === "borrow") {
+      message += `اسم الكتاب المستعار: ${data.borrowedBookName}\n`;
+    }
 
     try {
       const response = await fetch(TELEGRAM_URL, {
