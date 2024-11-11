@@ -7,7 +7,7 @@
   <style>
     body { font-family: Arial, sans-serif; direction: rtl; background-color: #f4f4f9; }
     h1 { text-align: center; color: #333; }
-    form, #bookSearchSection {
+    form {
       width: 60%;
       max-width: 500px;
       margin: auto;
@@ -64,9 +64,11 @@
     <option value="donate">إعارة كتاب</option>
   </select>
   
+  <!-- خيارات البحث -->
   <div id="searchOptions" class="hidden">
-    <input type="text" id="searchInput" onkeyup="searchBooks()" placeholder="ابحث عن كتاب...">
-    <table id="booksTable">
+    <label for="searchInput">بحث عن كتاب أو مؤلف:</label>
+    <input type="text" id="searchInput" onkeyup="searchBooks()" placeholder="أدخل اسم الكتاب أو المؤلف...">
+    <table id="booksTable" class="hidden">
       <thead>
         <tr>
           <th>اسم الكتاب</th>
@@ -89,53 +91,44 @@
 <footer>عمل الطالبة ليلى</footer>
 
 <script>
-  function toggleFields() {
-    const actionType = document.getElementById("actionType").value;
-    document.getElementById("searchOptions").classList.toggle("hidden", actionType !== "search");
-    document.getElementById("borrowOptions").classList.toggle("hidden", actionType !== "borrow");
-  }
-
   // دالة تحميل الكتب من ملف TXT
   async function loadBooks() {
     try {
       const response = await fetch('books.txt');
       const content = await response.text();
-      displayBooks(content);
+      window.booksData = content.split('\n').map(line => {
+        const [bookName, author, condition] = line.split(',');
+        return { bookName: bookName?.trim(), author: author?.trim(), condition: condition?.trim() };
+      });
     } catch (error) {
       alert('فشل في تحميل الكتب');
     }
   }
 
-  // عرض الكتب في الجدول
-  function displayBooks(content) {
-    const lines = content.split('\n');
-    const booksBody = document.getElementById('booksBody');
-    booksBody.innerHTML = '';
-
-    lines.forEach(line => {
-      if (!line.trim()) return;
-      const [bookName, author, condition] = line.split(',');
-      const row = `<tr onclick="selectBook('${bookName}')"><td>${bookName}</td><td>${author}</td><td>${condition}</td></tr>`;
-      booksBody.innerHTML += row;
-    });
-  }
-
   // البحث عن الكتب
   function searchBooks() {
     const input = document.getElementById('searchInput').value.toLowerCase();
-    const rows = document.getElementById('booksTable').getElementsByTagName('tr');
+    const booksBody = document.getElementById('booksBody');
+    const booksTable = document.getElementById('booksTable');
 
-    for (let i = 1; i < rows.length; i++) {
-      const cells = rows[i].getElementsByTagName('td');
-      let match = false;
+    booksBody.innerHTML = '';
 
-      for (let j = 0; j < cells.length; j++) {
-        if (cells[j].innerText.toLowerCase().includes(input)) {
-          match = true;
-          break;
-        }
-      }
-      rows[i].style.display = match ? '' : 'none';
+    const filteredBooks = window.booksData.filter(book =>
+      book.bookName.toLowerCase().includes(input) || book.author.toLowerCase().includes(input)
+    );
+
+    if (filteredBooks.length > 0) {
+      booksTable.classList.remove('hidden');
+      filteredBooks.forEach(book => {
+        const row = `<tr onclick="selectBook('${book.bookName}')">
+                      <td>${book.bookName}</td>
+                      <td>${book.author}</td>
+                      <td>${book.condition}</td>
+                    </tr>`;
+        booksBody.innerHTML += row;
+      });
+    } else {
+      booksTable.classList.add('hidden');
     }
   }
 
@@ -144,6 +137,12 @@
     document.getElementById('borrowedBookName').value = bookName;
     document.getElementById("actionType").value = "borrow";
     toggleFields();
+  }
+
+  function toggleFields() {
+    const actionType = document.getElementById("actionType").value;
+    document.getElementById("searchOptions").classList.toggle("hidden", actionType !== "search");
+    document.getElementById("borrowOptions").classList.toggle("hidden", actionType !== "borrow");
   }
 
   // تحميل الكتب عند فتح الصفحة
