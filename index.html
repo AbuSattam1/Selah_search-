@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>نموذج مكتبة صلة</title>
+  <style>
+    body { font-family: Arial, sans-serif; direction: rtl; background-color: #f4f4f9; }
+    h1 { text-align: center; color: #333; }
+    form, .login-form, #bookSearchSection {
+      width: 60%;
+      max-width: 500px;
+      margin: auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      margin-top: 20px;
+    }
+    label { font-weight: bold; color: #555; margin-top: 10px; }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover { background-color: #45a049; }
+    .hidden { display: none; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 10px; border: 1px solid #ddd; text-align: center; }
+    th { background-color: #4CAF50; color: white; }
+    footer { text-align: center; font-size: 12px; color: #666; margin-top: 20px; }
+  </style>
+</head>
+<body>
+
+<h1>مكتبة صلة - تسجيل الدخول والبحث</h1>
+
+<!-- نموذج تسجيل الدخول -->
+<div class="login-form" id="loginSection">
+  <h2>تسجيل الدخول</h2>
+  <label for="username">اسم المستخدم:</label>
+  <input type="text" id="username" required>
+  <label for="password">كلمة المرور:</label>
+  <input type="password" id="password" required>
+  <button onclick="login()">دخول</button>
+</div>
+
+<!-- قسم البحث في الكتب -->
+<div id="bookSearchSection" class="hidden">
+  <h2>البحث عن كتاب</h2>
+  <button onclick="loadBooks()">تحميل الكتب</button>
+  <input type="text" id="searchInput" onkeyup="searchBooks()" placeholder="ابحث عن كتاب...">
+  <table id="booksTable">
+    <thead>
+      <tr>
+        <th>اسم الكتاب</th>
+        <th>المؤلف</th>
+      </tr>
+    </thead>
+    <tbody id="booksBody"></tbody>
+  </table>
+</div>
+
+<!-- نموذج تعبئة البيانات -->
+<form id="libraryForm" class="hidden">
+  <label for="fullName">الاسم الثلاثي:</label>
+  <input type="text" id="fullName" required>
+
+  <label for="universityID">الرقم الجامعي:</label>
+  <input type="text" id="universityID" required pattern="\d*" maxlength="10">
+
+  <label for="phoneNumber">رقم الجوال:</label>
+  <input type="tel" id="phoneNumber" required pattern="\d*" maxlength="10">
+  
+  <label for="actionType">الاختيار:</label>
+  <select id="actionType" required>
+    <option value="">اختر نوع المعاملة</option>
+    <option value="borrow">استعارة كتاب</option>
+    <option value="donate">إعارة كتاب</option>
+  </select>
+  
+  <button type="button" onclick="submitForm()">إرسال</button>
+</form>
+
+<footer>عمل الطالبة ليلى</footer>
+
+<script>
+  // دالة تسجيل الدخول
+  function login() {
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    
+    if (username === 'admin' && password === '1234') {
+      alert('تم تسجيل الدخول بنجاح');
+      document.getElementById('loginSection').classList.add('hidden');
+      document.getElementById('bookSearchSection').classList.remove('hidden');
+      document.getElementById('libraryForm').classList.remove('hidden');
+    } else {
+      alert('بيانات الدخول غير صحيحة');
+    }
+  }
+
+  // دالة تحميل الكتب من ملف TXT
+  async function loadBooks() {
+    try {
+      const response = await fetch('books.txt');
+      const content = await response.text();
+      displayBooks(content);
+    } catch (error) {
+      alert('فشل في تحميل الكتب');
+    }
+  }
+
+  // عرض الكتب في الجدول
+  function displayBooks(content) {
+    const lines = content.split('\n');
+    const booksBody = document.getElementById('booksBody');
+    booksBody.innerHTML = '';
+    
+    lines.forEach(line => {
+      if (!line.trim()) return;
+      const [bookName, author] = line.split(',');
+      const row = `<tr><td>${bookName}</td><td>${author}</td></tr>`;
+      booksBody.innerHTML += row;
+    });
+  }
+
+  // البحث عن الكتب
+  function searchBooks() {
+    const input = document.getElementById('searchInput').value.toLowerCase();
+    const rows = document.getElementById('booksTable').getElementsByTagName('tr');
+
+    for (let i = 1; i < rows.length; i++) {
+      const cells = rows[i].getElementsByTagName('td');
+      let match = false;
+
+      for (let j = 0; j < cells.length; j++) {
+        if (cells[j].innerText.toLowerCase().includes(input)) {
+          match = true;
+          break;
+        }
+      }
+      rows[i].style.display = match ? '' : 'none';
+    }
+  }
+
+  // إرسال البيانات عبر Telegram
+  async function submitForm() {
+    const data = {
+      fullName: document.getElementById('fullName').value,
+      universityID: document.getElementById('universityID').value,
+      phoneNumber: document.getElementById('phoneNumber').value,
+      actionType: document.getElementById('actionType').value
+    };
+
+    const TELEGRAM_CHAT_ID = '201453';
+    const TELEGRAM_TOKEN = '5061281257:AAFIvd4HojSCPr4U_Avy7GO4hvGDLQDZLH8';
+    const TELEGRAM_URL = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
+
+    let message = `الاسم: ${data.fullName}\nالرقم الجامعي: ${data.universityID}\nرقم الجوال: ${data.phoneNumber}\nالاختيار: ${data.actionType}`;
+
+    try {
+      const response = await fetch(TELEGRAM_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message })
+      });
+
+      if (response.ok) {
+        alert('تم إرسال النموذج بنجاح إلى تليجرام');
+      } else {
+        alert('فشل إرسال النموذج');
+      }
+    } catch (error) {
+      alert('حدث خطأ أثناء إرسال النموذج');
+    }
+  }
+</script>
+
+</body>
+</html>
