@@ -40,6 +40,7 @@
     th { background-color: #4CAF50; color: white; }
     footer { text-align: center; font-size: 12px; color: #666; margin-top: 20px; }
     .no-results { color: #ff0000; text-align: center; margin-top: 10px; }
+    .highlight { background-color: yellow; }
   </style>
 </head>
 <body>
@@ -47,7 +48,7 @@
 <h1>مكتبة صلة - البحث وإرسال الطلبات</h1>
 
 <!-- نموذج تعبئة البيانات -->
-<form id="libraryForm">
+<form id="libraryForm" onsubmit="return validateForm()">
   <label for="fullName">الاسم الثلاثي:</label>
   <input type="text" id="fullName" required>
 
@@ -68,7 +69,7 @@
   <!-- خيارات البحث -->
   <div id="searchOptions" class="hidden">
     <label for="searchInput">بحث عن كتاب أو مؤلف:</label>
-    <input type="text" id="searchInput" onkeyup="searchBooks(event)" placeholder="أدخل اسم الكتاب أو المؤلف...">
+    <input type="text" id="searchInput" onkeyup="searchBooks(event)" placeholder="أدخل اسم الكتاب أو المؤلف..." required>
     <div id="searchResults" class="no-results hidden"></div>
     <table id="booksTable" class="hidden">
       <thead>
@@ -84,10 +85,10 @@
 
   <div id="borrowOptions" class="hidden">
     <label for="borrowedBookName">اسم الكتاب المستعار:</label>
-    <input type="text" id="borrowedBookName">
+    <input type="text" id="borrowedBookName" required>
   </div>
 
-  <button type="button" onclick="submitForm()">إرسال</button>
+  <button type="submit">إرسال</button>
 </form>
 
 <footer>عمل الطالبة ليلى</footer>
@@ -124,9 +125,11 @@
     if (filteredBooks.length > 0) {
       booksTable.classList.remove('hidden');
       filteredBooks.forEach(book => {
+        const highlightedBookName = highlightText(book.bookName, input);
+        const highlightedAuthor = highlightText(book.author, input);
         const row = `<tr onclick="selectBook('${book.bookName}')">
-                      <td>${book.bookName}</td>
-                      <td>${book.author}</td>
+                      <td>${highlightedBookName}</td>
+                      <td>${highlightedAuthor}</td>
                       <td>${book.condition}</td>
                     </tr>`;
         booksBody.innerHTML += row;
@@ -137,6 +140,12 @@
       searchResults.innerHTML = 'لا توجد نتائج مطابقة.';
       searchResults.classList.remove('hidden');
     }
+  }
+
+  // تسليط الضوء على النص المتطابق
+  function highlightText(text, searchTerm) {
+    const regex = new RegExp(`(${searchTerm})`, 'gi');
+    return text.replace(regex, '<span class="highlight">$1</span>');
   }
 
   // اختيار الكتاب وإدخاله في حقل اسم الكتاب
@@ -154,6 +163,16 @@
 
   // تحميل الكتب عند فتح الصفحة
   window.onload = loadBooks;
+
+  // التحقق من صحة النموذج
+  function validateForm() {
+    const actionType = document.getElementById("actionType").value;
+    if (actionType === "borrow" && !document.getElementById('borrowedBookName').value) {
+      alert('يرجى إدخال اسم الكتاب المستعار.');
+      return false; // يمنع إرسال النموذج
+    }
+    return true; // يسمح بإرسال النموذج
+  }
 
   // إرسال البيانات عبر Telegram
   async function submitForm() {
